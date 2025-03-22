@@ -24,5 +24,3 @@ def file_downloader(link, path):
     for chunk in file.iter_content(1000000):
         file_on_disk.write(file.content)
     file_on_disk.close()
-
-    print('File Download Successfull')

@@ -4,7 +4,8 @@ import threading
 
 
 def download_chapter(link):
-    global backup_directory
+    global backup_directory, total_threads_finished
+    print(Path(link).name + ' Started Downloading')
     site = requests.get(link)
     site.raise_for_status()
     chapter_path = backup_directory / Path(link).name
@@ -29,8 +30,16 @@ def download_chapter(link):
     file.write(soup.prettify(soup.original_encoding))
     file.close()
 
-    print(Path(link).name + ' Done')
+    
 
+    lock.acquire()
+    total_threads_finished += 1
+    print(Path(link).name + ' Finished Downloading')
+    lock.release()
+
+
+lock = threading.Lock()
+total_threads_finished = 0
 
 page_links = get_page_links(TOC_LINK_PAGE)[0:24]
 path_of_css = Path(STYLE_FILE_PATH)
@@ -45,19 +54,31 @@ os.makedirs(css_file_path, exist_ok=True)
 css_file_final_path= css_file_path / 'automate2_website.css'
 file_downloader(CSS_FILE_LINK, css_file_final_path)
 
-threads = []
-for link in page_links:
-    print(link)
-    thread_obj = threading.Thread(target=download_chapter, args=[link])
-    threads.append(thread_obj)
-    thread_obj.start()
-    print('Started a thread')
 
-    if len(threads) == TOTAL_RUN_THREADS:
-        for obj in threads:
-            obj.join()
+move = 0
+total_links = len(page_links)
+current_threads = 0
+run_block = True
+while move < total_links:
+    if run_block and (current_threads <= TOTAL_ALLOWED_THREADS):
+        thread_obj = threading.Thread(target=download_chapter, args=[page_links[move]])
+        thread_obj.start()
+        current_threads += 1
+        move += 1
+        if current_threads == TOTAL_ALLOWED_THREADS:
+            run_block = False
 
-        threads = []
+
+    if total_threads_finished:
+        total_threads_finished -= 1
+        run_block = True
+        current_threads -= 1
+
+    elif current_threads == TOTAL_ALLOWED_THREADS:
+        time.sleep(1)
+
+
+
    
 
     
