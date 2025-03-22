@@ -41,7 +41,7 @@ def download_chapter(link):
 lock = threading.Lock()
 total_threads_finished = 0
 
-page_links = get_page_links(TOC_LINK_PAGE)[0:24]
+page_links = [TOC_LINK_PAGE] + get_page_links(TOC_LINK_PAGE)[0:24]
 path_of_css = Path(STYLE_FILE_PATH)
 
 
