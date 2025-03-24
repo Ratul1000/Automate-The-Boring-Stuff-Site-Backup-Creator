@@ -16,6 +16,26 @@ def download_chapter(link):
     image_folder = chapter_path/'images'
 
     os.makedirs(image_folder)
+    names = Path(link).name
+    if 'chapter' in names:
+        button = soup.select('center a')[:6]
+        value = number_extractor(names)
+
+        if value == 0:
+            for butn in button:
+                if 'toc' in butn.attrs['href']:
+                    butn.attrs['href'] = Path('..')/'#toc'/'#toc.html'
+                elif 'next' in str(butn):
+                    butn.attrs['href'] = Path('..')/('chapter'+str(value + 1))/('chapter'+str(value + 1) +'.html')
+        else:
+            for butn in button:
+                if 'toc' in butn.attrs['href']:
+                    butn.attrs['href'] = Path('..')/'#toc'/'#toc.html'
+
+                elif 'prev' in str(butn):
+                    butn.attrs['href'] = Path('..')/('chapter'+str(value - 1))/('chapter'+str(value - 1) +'.html')
+                elif 'next' in str(butn):
+                    butn.attrs['href'] = Path('..')/('chapter'+str(value + 1))/('chapter'+str(value + 1) +'.html')
 
 
     for link2 in soup.select('img'):
