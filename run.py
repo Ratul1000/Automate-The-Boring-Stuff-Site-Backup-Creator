@@ -3,8 +3,8 @@ from config import *
 import threading
 
 
-def download_chapter(link):
-    global backup_directory, total_threads_finished
+def download_chapter(link, link_index):
+    global backup_directory, total_threads_finished, page_links, lock
     print(Path(link).name + ' Started Downloading')
     site = requests.get(link)
     site.raise_for_status()
@@ -16,26 +16,18 @@ def download_chapter(link):
     image_folder = chapter_path/'images'
 
     os.makedirs(image_folder)
-    names = Path(link).name
-    if 'chapter' in names:
-        button = soup.select('center a')[:6]
-        value = number_extractor(names)
 
-        if value == 0:
-            for butn in button:
-                if 'toc' in butn.attrs['href']:
-                    butn.attrs['href'] = Path('..')/'#toc'/'#toc.html'
-                elif 'next' in str(butn):
-                    butn.attrs['href'] = Path('..')/('chapter'+str(value + 1))/('chapter'+str(value + 1) +'.html')
-        else:
-            for butn in button:
-                if 'toc' in butn.attrs['href']:
-                    butn.attrs['href'] = Path('..')/'#toc'/'#toc.html'
+    button = soup.select('center a')[:6]
+    for butn in button:
+        if 'toc' in butn.attrs['href']:
+            butn.attrs['href'] = pathname2url(str(Path('..')/Path(TOC_LINK_PAGE).name/(Path(TOC_LINK_PAGE).name + '.html')))
+        
+        elif 'next' in str(butn):
+            butn.attrs['href'] = Path('..')/Path(page_links[link_index + 1]).name/(Path(page_links[link_index + 1]).name + '.html')
 
-                elif 'prev' in str(butn):
-                    butn.attrs['href'] = Path('..')/('chapter'+str(value - 1))/('chapter'+str(value - 1) +'.html')
-                elif 'next' in str(butn):
-                    butn.attrs['href'] = Path('..')/('chapter'+str(value + 1))/('chapter'+str(value + 1) +'.html')
+        elif 'prev' in str(butn):
+            butn.attrs['href'] = Path('..')/Path(page_links[link_index - 1]).name/(Path(page_links[link_index - 1]).name + '.html')
+
 
 
     for link2 in soup.select('img'):
@@ -81,7 +73,7 @@ current_threads = 0
 run_block = True
 while move < total_links:
     if run_block and (current_threads <= TOTAL_ALLOWED_THREADS):
-        thread_obj = threading.Thread(target=download_chapter, args=[page_links[move]])
+        thread_obj = threading.Thread(target=download_chapter, args=[page_links[move], move])
         thread_obj.start()
         current_threads += 1
         move += 1

@@ -1,6 +1,8 @@
 import requests, os, time, bs4
 from pathlib import Path
 from urllib.parse import urljoin
+from urllib.request import pathname2url
+
 
 def get_page_links(base_link):
     
@@ -25,14 +27,3 @@ def file_downloader(link, path):
         file_on_disk.write(file.content)
     file_on_disk.close()
 
-def number_extractor(name):
-    num = [str(x) for x in range(10)]
-    number = ''
-
-    for x in name:
-        if x in num:
-            number = number + x
-
-    return int(number)
-
-print(number_extractor('hello23ko42'))
